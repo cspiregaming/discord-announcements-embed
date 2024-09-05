@@ -1,6 +1,7 @@
 name: 'Discord Announcement Embeds'
 author: 'michaellambgelo'
 description: 'A GitHub workflow for sending a customized message to an announcements channel.'
+
 inputs:
   webhook-url:
     description: 'The Discord webhook URL this notification will be sent to.'
@@ -11,14 +12,14 @@ inputs:
   embed-color:
     description: "The embed's color."
     required: false
-    default: '#00FFFF'  # Cyan color value
+    default: '#00FFFF'
   footer-icon:
     description: 'A small icon to put on the footer. Required in order to show the issue title and creator.'
     required: false
     default: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
   scheduled-time:
     description: 'The date/time to schedule the notification (in format: YYYY-MM-DD HH:MM).'
-    required: true  # Required input for scheduling the workflow
+    required: true
 
 runs:
   using: "composite"
@@ -59,4 +60,4 @@ runs:
         data: '{"content": "${{inputs.msg-content}}", "embeds": [{"title": "[${{steps.process_issue.outputs.ISSUE_TITLE}}](${{github.event.issue.html_url}})", "color": ${{inputs.embed-color}}, "footer": {"text": "Issue created by ${{steps.process_issue.outputs.ISSUE_CREATOR}}", "icon_url": "${{inputs.footer-icon}}"}, "timestamp": "${{steps.get_time.outputs.time}}"}], "username": "${{steps.process_issue.outputs.ISSUE_CREATOR}}", "avatar_url": "${{fromJson(steps.get_org_avatar.outputs.response).avatar_url}}"}'
 branding:
   icon: 'bell'
-  color: 'cyan'  # Updated branding color to cyan
+  color: 'cyan'
