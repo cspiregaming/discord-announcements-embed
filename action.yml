@@ -12,7 +12,7 @@ inputs:
   embed-color:
     description: "The embed's color."
     required: false
-    default: '#00FFFF'
+    default: '65535'
   footer-icon:
     description: 'A small icon to put on the footer. Required in order to show the issue title and creator.'
     required: false
