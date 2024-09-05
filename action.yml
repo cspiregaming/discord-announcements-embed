@@ -1,0 +1,67 @@
+name: 'Discord Announcement Embeds'
+author: 'michaellambgelo'
+description: 'A GitHub workflow for sending a customized message to an announcements channel.'
+inputs:
+  webhook-url:
+    description: 'The Discord webhook URL this notification will be sent to.'
+    required: true
+  msg-content:
+    description: 'Message content for the Webhook Message.'
+    required: true  # Now required
+  embed-color:
+    description: "The embed's color."
+    required: false
+    default: '#00FFFF'  # Cyan color value
+  footer-icon:
+    description: 'A small icon to put on the footer. Required in order to show the issue title and creator.'
+    required: false
+    default: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
+  scheduled-time:
+    description: 'The date/time to schedule the notification (in format: YYYY-MM-DD HH:MM).'
+    required: true  # Required input for scheduling the workflow
+runs:
+  using: "composite"
+  steps:
+    - name: Schedule Workflow
+      # Converts the user input for the date/time to the proper format for scheduling
+      id: schedule_workflow
+      run: |
+        SCHEDULED_TIME="${{ inputs.scheduled-time }}"
+        CRON_EXPRESSION=$(date -d "$SCHEDULED_TIME" '+%M %H %d %m *')
+        
+        # This line outputs the cron expression to be used
+        echo "CRON_EXPRESSION=$CRON_EXPRESSION" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Get Issue Details
+      # Grabs the issue title and creator from the GitHub event that triggered the workflow
+      id: process_issue
+      run: |
+        ISSUE_TITLE="${{ github.event.issue.title }}"
+        ISSUE_CREATOR="${{ github.event.issue.user.login }}"
+        
+        echo "ISSUE_TITLE=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+        echo "ISSUE_CREATOR=$ISSUE_CREATOR" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Get Current Time
+      uses: josStorer/get-current-time@master
+      id: get_time
+
+    - name: Get Organization Avatar
+      # Fetches the organization's avatar from the GitHub API
+      uses: fjogeleit/http-request-action@master
+      id: get_org_avatar
+      with:
+        url: "https://api.github.com/orgs/${{ github.repository_owner }}"
+        method: "GET"
+
+    - name: Send Notification
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: ${{ inputs.webhook-url }}
+        method: 'POST'
+        data: '{"content":"${{inputs.msg-content}}","embeds":[{"title":"${{github.repository}} [Issue Created]","description":"Issue: ${{steps.process_issue.outputs.ISSUE_TITLE}} by ${{steps.process_issue.outputs.ISSUE_CREATOR}}","url":"${{github.event.issue.html_url}}","color":${{inputs.embed-color}},"footer":{"text":"Issue created by ${{steps.process_issue.outputs.ISSUE_CREATOR}}","icon_url":"${{inputs.footer-icon}}"},"timestamp":"${{steps.get_time.outputs.time}}"}],"username":"${{steps.process_issue.outputs.ISSUE_CREATOR}}","avatar_url":"${{fromJson(steps.get_org_avatar.outputs.response).avatar_url}}"}'
+branding:
+  icon: 'bell'
+  color: 'cyan'  # Updated branding color to cyan
