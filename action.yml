@@ -7,12 +7,11 @@ inputs:
     description: 'Discord webhook URL.'
     required: true
   announcement-content:
-    description: 'Main content of the announcement.'
+    description: 'The main content for the announcement embed.'
     required: true
   additional-info:
-    description: 'Additional information to include in the announcement (optional).'
+    description: 'Additional information to be included in the embed (optional).'
     required: false
-    default: ''
   embed-color:
     description: "Embed color (hex)."
     required: false
@@ -40,12 +39,6 @@ runs:
       run: |
         ISSUE_TITLE="${{ github.event.issue.title }}"
         ISSUE_CREATOR="${{ github.event.issue.user.login }}"
-        if [[ -n "${{ inputs.additional-info }}" ]]; then
-          FULL_CONTENT="${{ inputs.announcement-content }}\n---\n${{ inputs.additional-info }}"
-        else
-          FULL_CONTENT="${{ inputs.announcement-content }}"
-        fi
-        echo "FULL_CONTENT=$FULL_CONTENT" >> $GITHUB_OUTPUT
         echo "ISSUE_TITLE=$ISSUE_TITLE" >> $GITHUB_OUTPUT
         echo "ISSUE_CREATOR=$ISSUE_CREATOR" >> $GITHUB_OUTPUT
       shell: bash
@@ -55,4 +48,22 @@ runs:
       with:
         url: ${{ inputs.webhook-url }}
         method: 'POST'
-        data: '{"content": "${{ inputs.announcement-content }}", "embeds": [{"title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}", "description": "${{ steps.prepare_embed.outputs.FULL_CONTENT }}", "color": ${{ inputs.embed-color }}, "footer": {"text": "Created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}", "icon_url": "${{ inputs.footer-icon }}" }, "timestamp": "${{ steps.get_time.outputs.time }}"}]}'
+        data: |
+          {
+            "content": "${{ inputs.announcement-content }}",
+            "embeds": [{
+              "title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}",
+              "description": "${{ inputs.announcement-content }}${{ inputs.additional-info && '\n---\n' + inputs.additional-info }}",
+              "color": ${{ inputs.embed-color }},
+              "footer": {
+                "text": "Announcement created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}",
+                "icon_url": "${{ inputs.footer-icon }}"
+              },
+              "timestamp": "${{ steps.get_time.outputs.time }}"
+            }],
+            "username": "C Spire Gaming",
+            "avatar_url": "${{ fromJson(steps.get_org_avatar.outputs.response).avatar_url }}"
+          }
+branding:
+  icon: 'bell'
+  color: 'cyan'
