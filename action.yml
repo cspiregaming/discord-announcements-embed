@@ -1,39 +1,38 @@
 name: 'Discord Announcement Embeds'
 author: 'michaellambgelo'
-description: 'A GitHub workflow for sending a customized message to an announcements channel.'
+description: 'Send a scheduled message to Discord via webhook.'
 
 inputs:
   webhook-url:
-    description: 'The Discord webhook URL this notification will be sent to.'
+    description: 'Discord webhook URL.'
     required: true
   msg-content:
-    description: 'Message content for the Webhook Message.'
+    description: 'Message content for the webhook.'
     required: true
   embed-color:
-    description: "The embed's color."
+    description: "Embed color (hex)."
     required: false
     default: '65535'
   footer-icon:
-    description: 'A small icon to put on the footer. Required in order to show the issue title and creator.'
+    description: 'Icon URL for the footer (default: GitHub Mark).'
     required: false
     default: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
   scheduled-time:
-    description: 'The date/time to schedule the notification (in format: YYYY-MM-DD HH:MM).'
+    description: 'Date and time for the notification (YYYY-MM-DD HH:MM).'
     required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Schedule Workflow
-      id: schedule_workflow
+    - name: Generate Cron Expression
+      id: cron
       run: |
-        SCHEDULED_TIME="${{ inputs.scheduled-time }}"
-        CRON_EXPRESSION=$(date -d "$SCHEDULED_TIME" '+%M %H %d %m *')
+        CRON_EXPRESSION=$(date -d "${{ inputs.scheduled-time }}" '+%M %H %d %m *')
         echo "CRON_EXPRESSION=$CRON_EXPRESSION" >> $GITHUB_ENV
       shell: bash
       
-    - name: Get Issue Details
-      id: process_issue
+    - name: Prepare Announcement Embed
+      id: prepare_embed
       run: |
         ISSUE_TITLE="${{ github.event.issue.title }}"
         ISSUE_CREATOR="${{ github.event.issue.user.login }}"
@@ -41,39 +40,22 @@ runs:
         echo "ISSUE_CREATOR=$ISSUE_CREATOR" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: Get Announcement Content and Additional Info
-      id: get_content
-      run: |
-        ANNOUNCEMENT_CONTENT="${{ env.ANNOUNCEMENT_CONTENT }}"
-        ADDITIONAL_INFO="${{ env.ADDITIONAL_INFO }}"
-        
-        if [[ -n "$ADDITIONAL_INFO" ]]; then
-          SEPARATOR="\n---\n"  # Horizontal line separator
-          FULL_CONTENT="$ANNOUNCEMENT_CONTENT$SEPARATOR$ADDITIONAL_INFO"
-        else
-          FULL_CONTENT="$ANNOUNCEMENT_CONTENT"
-        fi
-        
-        echo "FULL_CONTENT=$FULL_CONTENT" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Get Current Time
-      uses: josStorer/get-current-time@master
-      id: get_time
-
-    - name: Get Organization Avatar
-      uses: fjogeleit/http-request-action@master
-      id: get_org_avatar
-      with:
-        url: "https://api.github.com/orgs/${{ github.repository_owner }}"
-        method: "GET"
-
-    - name: Send Notification
+    - name: Send to Discord
       uses: fjogeleit/http-request-action@master
       with:
         url: ${{ inputs.webhook-url }}
         method: 'POST'
-        data: '{"content": "${{inputs.msg-content}}", "embeds": [{"title": "${{ steps.process_issue.outputs.ISSUE_TITLE }}", "url": "${{ github.event.issue.html_url }}", "description": "${{ env.FULL_CONTENT }}", "color": ${{inputs.embed-color}}, "footer": {"text": "Announcement created by ${{steps.process_issue.outputs.ISSUE_CREATOR}}", "icon_url": "${{inputs.footer-icon}}"}, "timestamp": "${{steps.get_time.outputs.time}}"}], "username": "C Spire Gaming", "avatar_url": "${{fromJson(steps.get_org_avatar.outputs.response).avatar_url}}"}'
-branding:
-  icon: 'bell'
-  color: 'cyan'
+        data: |
+          {
+            "content": "${{inputs.msg-content}}",
+            "embeds": [{
+              "title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}",
+              "description": "${{ env.ANNOUNCEMENT_CONTENT }}",
+              "color": ${{ inputs.embed-color }},
+              "footer": {
+                "text": "Created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}",
+                "icon_url": "${{ inputs.footer-icon }}"
+              },
+              "timestamp": "${{ steps.get_time.outputs.time }}"
+            }]
+          }
