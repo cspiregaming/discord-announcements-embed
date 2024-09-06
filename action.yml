@@ -53,7 +53,7 @@ runs:
             "content": "${{ inputs.announcement-content }}",
             "embeds": [{
               "title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}",
-              "description": "${{ inputs.announcement-content }}${{ inputs.additional-info && '\n---\n' + inputs.additional-info }}",
+              "description": "${{ inputs.announcement-content }}{{ inputs.additional-info != '' && ' \n---\n ' || '' }}${{ inputs.additional-info }}",
               "color": ${{ inputs.embed-color }},
               "footer": {
                 "text": "Announcement created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}",
