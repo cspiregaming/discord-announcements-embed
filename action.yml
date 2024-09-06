@@ -48,4 +48,14 @@ runs:
       with:
         url: ${{ inputs.webhook-url }}
         method: 'POST'
-        data: '{"content": "${{inputs.announcement-content}}", "embeds": [{"title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}", "description": "${{ inputs.announcement-content }}${{ inputs.additional-info && "\n---\n" + inputs.additional-info || "" }}", "color": ${{ inputs.embed-color }}, "footer": {"text": "Created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}", "icon_url": "${{​⬤
+        data: >
+          {"content": "${{inputs.announcement-content}}", 
+          "embeds": [{
+            "title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}", 
+            "description": "${{ inputs.announcement-content }}${{ inputs.additional-info && '\n---\n' + inputs.additional-info || '' }}", 
+            "color": ${{ inputs.embed-color }}, 
+            "footer": {"text": "Created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}", 
+            "icon_url": "${{ inputs.footer-icon }}"}, 
+            "timestamp": "${{ steps.get_time.outputs.time }}"}], 
+          "username": "C Spire Gaming", 
+          "avatar_url": "${{ fromJson(steps.get_org_avatar.outputs.response).avatar_url }}"}
