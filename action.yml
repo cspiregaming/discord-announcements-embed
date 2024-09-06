@@ -49,10 +49,10 @@ runs:
         url: ${{ inputs.webhook-url }}
         method: 'POST'
         data: >
-          {"content": "${{inputs.announcement-content}}", 
+          {"content": "${{ inputs.announcement-content }}", 
           "embeds": [{
             "title": "${{ steps.prepare_embed.outputs.ISSUE_TITLE }}", 
-            "description": "${{ inputs.announcement-content }}${{ inputs.additional-info && '\n---\n' + inputs.additional-info || '' }}", 
+            "description": "${{ inputs.announcement-content }}{{ inputs.additional-info && '\n---\n' }}{{ inputs.additional-info }}", 
             "color": ${{ inputs.embed-color }}, 
             "footer": {"text": "Created by ${{ steps.prepare_embed.outputs.ISSUE_CREATOR }}", 
             "icon_url": "${{ inputs.footer-icon }}"}, 
