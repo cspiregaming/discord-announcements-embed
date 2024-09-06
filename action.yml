@@ -57,7 +57,7 @@ runs:
       with:
         url: ${{ inputs.webhook-url }}
         method: 'POST'
-        data: '{"content": "${{inputs.msg-content}}", "embeds": [{"title": "[${{steps.process_issue.outputs.ISSUE_TITLE}}](${{github.event.issue.html_url}})", "description": "${{ env.ANNOUNCEMENT_CONTENT }}", "color": ${{inputs.embed-color}}, "footer": {"text": "Announcement created by ${{steps.process_issue.outputs.ISSUE_CREATOR}}", "icon_url": "${{inputs.footer-icon}}"}, "timestamp": "${{steps.get_time.outputs.time}}"}], "username": "${{github.repository_owner}}", "avatar_url": "${{fromJson(steps.get_org_avatar.outputs.response).avatar_url}}"}'
+        data: '{"content": "${{inputs.msg-content}}", "embeds": [{"title": "${{ steps.process_issue.outputs.ISSUE_TITLE }}", "URL": ${{ github.event.issue.html_url }}, "description": "${{ env.ANNOUNCEMENT_CONTENT }}", "color": ${{inputs.embed-color}}, "footer": {"text": "Announcement created by ${{steps.process_issue.outputs.ISSUE_CREATOR}}", "icon_url": "${{inputs.footer-icon}}"}, "timestamp": "${{steps.get_time.outputs.time}}"}], "username": "C Spire Gaming", "avatar_url": "${{fromJson(steps.get_org_avatar.outputs.response).avatar_url}}"}'
 branding:
   icon: 'bell'
   color: 'cyan'
